@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facebook Photo Frame</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🎨 তোমার প্রোফাইল ফ্রেম বানাও</h1>
+
+    <input type="file" id="upload" accept="image/*">
+    <select id="frameSelect">
+      <option value="frames/frame1.png">Frame 1</option>
+      <option value="frames/frame2.png">Frame 2</option>
+    </select>
+
+    <button id="applyBtn">Apply Frame</button>
+
+    <canvas id="canvas"></canvas>
+
+    <a id="download" class="hidden" download="framed-photo.png">Download Photo</a>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
