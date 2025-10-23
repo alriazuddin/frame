@@ -26,8 +26,8 @@
 
   .frame-area {
     position: relative;
-    width: 350px;
-    height: 450px;
+    width: 350px;  /* preview size */
+    height: 350px;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
@@ -73,7 +73,7 @@
 
 <div class="description">
   <h2>FB Profile Frame</h2>
-  <p>This is test frame by Riaz. Upload your photo and adjust it to fit perfectly.</p>
+  <p>This is a test frame by Riaz. Upload your photo and adjust it to fit perfectly.</p>
 </div>
 
 <div class="frame-area" id="frame">
@@ -87,26 +87,26 @@
 </div>
 
 <script>
-const frame = document.getElementById('frame');
-const uploadInput = document.getElementById('upload');
-const downloadBtn = document.getElementById('downloadBtn');
-let uploadedImg = null;
+const frame=document.getElementById('frame');
+const uploadInput=document.getElementById('upload');
+const downloadBtn=document.getElementById('downloadBtn');
+let uploadedImg=null;
 
-// Transform variables
+// Transform vars
 let currentX=0, currentY=0, currentScale=1;
 let isDragging=false, startX=0, startY=0;
 
 // Upload photo
 uploadInput.addEventListener('change', e=>{
-  const file = e.target.files[0];
+  const file=e.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
+  const reader=new FileReader();
   reader.onload=function(ev){
     if(uploadedImg) uploadedImg.remove();
     uploadedImg=document.createElement('img');
     uploadedImg.src=ev.target.result;
     uploadedImg.classList.add('uploaded');
-    frame.insertBefore(uploadedImg, frame.querySelector('.bg-frame')); // Frame always on top
+    frame.insertBefore(uploadedImg, frame.querySelector('.bg-frame'));
     downloadBtn.classList.add('active');
     currentX=0; currentY=0; currentScale=1;
     updateTransform();
@@ -114,7 +114,6 @@ uploadInput.addEventListener('change', e=>{
   reader.readAsDataURL(file);
 });
 
-// Update transform
 function updateTransform(){
   if(!uploadedImg) return;
   uploadedImg.style.transform=`translate(${currentX}px,${currentY}px) scale(${currentScale})`;
@@ -142,32 +141,26 @@ document.addEventListener('mouseup', ()=>{
 // Drag touch
 frame.addEventListener('touchstart', e=>{
   if(!uploadedImg) return;
-  const touch = e.touches[0];
-  isDragging=true;
-  startX=touch.clientX - currentX;
-  startY=touch.clientY - currentY;
-});
-document.addEventListener('touchmove', e=>{
-  if(!isDragging || !uploadedImg) return;
-  const touch = e.touches[0];
-  currentX = touch.clientX - startX;
-  currentY = touch.clientY - startY;
-  updateTransform();
-});
-document.addEventListener('touchend', ()=>{ isDragging=false; });
-
-// Pinch zoom mobile
-let initialDistance=0, initialScale=1;
-frame.addEventListener('touchstart', e=>{
-  if(e.touches.length===2){
+  if(e.touches.length===1){
+    const touch=e.touches[0];
+    isDragging=true;
+    startX=touch.clientX - currentX;
+    startY=touch.clientY - currentY;
+  } else if(e.touches.length===2){
     e.preventDefault();
     const t1=e.touches[0], t2=e.touches[1];
     initialDistance = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
     initialScale=currentScale;
   }
 });
-frame.addEventListener('touchmove', e=>{
-  if(e.touches.length===2){
+document.addEventListener('touchmove', e=>{
+  if(!uploadedImg) return;
+  if(isDragging && e.touches.length===1){
+    const touch=e.touches[0];
+    currentX=touch.clientX-startX;
+    currentY=touch.clientY-startY;
+    updateTransform();
+  } else if(e.touches.length===2){
     e.preventDefault();
     const t1=e.touches[0], t2=e.touches[1];
     const newDist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
@@ -177,37 +170,41 @@ frame.addEventListener('touchmove', e=>{
     updateTransform();
   }
 });
+document.addEventListener('touchend', ()=>{ isDragging=false; });
 
-// Download
+// Download high-res 2400x2400
 downloadBtn.addEventListener('click', async ()=>{
   if(!uploadedImg) return;
   const canvas=document.createElement('canvas');
-  canvas.width=350; canvas.height=450;
+  canvas.width=2400;
+  canvas.height=2400;
   const ctx=canvas.getContext('2d');
 
-  // Draw uploaded image
+  const scaleFactor=2400/350;
+
   const img=new Image();
   img.src=uploadedImg.src;
   await new Promise(res=>img.onload=res);
   ctx.save();
-  ctx.translate(175,225);
-  ctx.translate(currentX,currentY);
-  ctx.scale(currentScale,currentScale);
-  ctx.drawImage(img,-175,-225,350,450);
+  ctx.translate(1200,1200);
+  ctx.translate(currentX*scaleFactor,currentY*scaleFactor);
+  ctx.scale(currentScale*scaleFactor,currentScale*scaleFactor);
+  ctx.drawImage(img,-175,-175,350,350);
   ctx.restore();
 
-  // Draw frame
   const frameImg=new Image();
   frameImg.src='frames/frame1.png';
   await new Promise(res=>frameImg.onload=res);
-  ctx.drawImage(frameImg,0,0,350,450);
+  ctx.drawImage(frameImg,0,0,2400,2400);
 
   canvas.toBlob(blob=>{
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url; a.download='profile-frame-by-riaz.png';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },'image/png');
 });
 </script>
