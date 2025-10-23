@@ -1,31 +1,136 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>riaz Frame</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frame Preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #eceff1, #f5f5f5);
+      margin: 0;
+    }
+    .frame-area {
+      position: relative;
+      width: 350px;
+      height: 450px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+    .frame-area img.bg-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .frame-area img.uploaded {
+      position: absolute;
+      max-width: 95%;
+      max-height: 95%;
+      transition: transform 0.2s ease;
+      border-radius: 12px;
+    }
+    input[type="file"] {
+      margin-top: 20px;
+      padding: 10px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    input[type="file"]:hover { background: #0d47a1; }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <h1>riaz Profile Frame</h1>
-    <p class="desc">এটি একটি পরীক্ষামূলক ফ্রেম সাইট — riaz দ্বারা নির্মিত।</p>
 
-    <div class="editor">
-      <div class="frame-area">
-        <img id="userImage" src="" alt="Your Image" class="user-img" />
-        <img id="frameImage" src="frames/frame1.png" alt="Frame" class="frame-img" />
-      </div>
-
-      <input type="file" id="upload" accept="image/*" />
-      <div class="zoom-controls">
-        <button onclick="zoom(-0.1)">-</button>
-        <button onclick="zoom(0.1)">+</button>
-      </div>
-      <button id="downloadBtn">Download Photo</button>
-    </div>
+  <div class="frame-area" id="frame">
+    <img src="frame1.png" class="bg-frame" alt="Frame">
   </div>
 
-  <script src="script.js"></script>
+  <input type="file" id="upload" accept="image/*">
+
+  <script>
+    const frame = document.getElementById('frame');
+    const uploadInput = document.getElementById('upload');
+    let uploadedImg = null;
+    let isDragging = false;
+    let offset = { x: 0, y: 0 };
+
+    // ছবি আপলোড ইভেন্ট
+    uploadInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        if (uploadedImg) uploadedImg.remove();
+        uploadedImg = document.createElement('img');
+        uploadedImg.src = event.target.result;
+        uploadedImg.classList.add('uploaded');
+        frame.appendChild(uploadedImg);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Drag শুরু
+    frame.addEventListener('mousedown', (e) => {
+      if (!uploadedImg) return;
+      isDragging = true;
+      offset.x = e.clientX - uploadedImg.offsetLeft;
+      offset.y = e.clientY - uploadedImg.offsetTop;
+      frame.style.cursor = 'grabbing';
+    });
+
+    // Mouse move
+    frame.addEventListener('mousemove', (e) => {
+      if (!isDragging || !uploadedImg) return;
+      uploadedImg.style.left = `${e.clientX - offset.x}px`;
+      uploadedImg.style.top = `${e.clientY - offset.y}px`;
+    });
+
+    // Drag শেষ
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      frame.style.cursor = 'grab';
+    });
+
+    // মোবাইল টাচ ইভেন্ট
+    frame.addEventListener('touchstart', (e) => {
+      if (!uploadedImg) return;
+      isDragging = true;
+      const touch = e.touches[0];
+      offset.x = touch.clientX - uploadedImg.offsetLeft;
+      offset.y = touch.clientY - uploadedImg.offsetTop;
+    });
+
+    frame.addEventListener('touchmove', (e) => {
+      if (!isDragging || !uploadedImg) return;
+      const touch = e.touches[0];
+      uploadedImg.style.left = `${touch.clientX - offset.x}px`;
+      uploadedImg.style.top = `${touch.clientY - offset.y}px`;
+    });
+
+    document.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+  </script>
+
 </body>
 </html>
