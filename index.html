@@ -1,346 +1,215 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Frame Preview</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      font-family: "Poppins", sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #eceff1, #f5f5f5);
-      margin: 0;
-      padding: 20px;
-    }
-    .description {
-      text-align: center;
-      margin-bottom: 20px;
-      max-width: 400px;
-    }
-    .description h2 {
-      color: #1976d2;
-      margin: 0 0 10px 0;
-      font-size: 24px;
-    }
-    .description p {
-      color: #555;
-      font-size: 14px;
-      margin: 0;
-    }
-    .frame-area {
-      position: relative;
-      width: 350px;
-      height: 450px;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .frame-area img.bg-frame {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-      z-index: 2;
-    }
-    .frame-area img.uploaded {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      cursor: move;
-      z-index: 1;
-    }
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      align-items: center;
-    }
-    .upload-btn {
-      padding: 12px 24px;
-      border: none;
-      background: #1976d2;
-      color: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 16px;
-      font-weight: 500;
-    }
-    .upload-btn:hover { background: #0d47a1; }
-    input[type="file"] { display: none; }
-    .adjustment-controls {
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 350px;
-    }
-    .adjustment-controls.active { display: flex; }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .control-group label {
-      font-size: 13px;
-      color: #666;
-      font-weight: 500;
-    }
-    .control-group input[type="range"] {
-      width: 100%;
-      cursor: pointer;
-    }
-    .download-btn {
-      padding: 12px 32px;
-      border: none;
-      background: #4caf50;
-      color: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 16px;
-      font-weight: 500;
-      display: none;
-    }
-    .download-btn:hover { background: #388e3c; }
-    .download-btn.active { display: block; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Riaz Profile Frame</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #eceff1, #f5f5f5);
+    padding: 20px;
+  }
+  .description {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 400px;
+  }
+  .description h2 { color:#1976d2; margin-bottom:10px;}
+  .description p { color:#555; font-size:14px;}
+
+  .frame-area {
+    position: relative;
+    width: 350px;
+    height: 450px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .frame-area img.bg-frame {
+    position: absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    pointer-events:none;
+    z-index:2;
+  }
+  .frame-area img.uploaded {
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    cursor:grab;
+    z-index:1;
+  }
+
+  .controls { margin-top:20px; display:flex; flex-direction:column; gap:15px; align-items:center;}
+  .upload-btn {
+    padding:12px 24px; border:none; background:#1976d2; color:#fff;
+    border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
+  }
+  .upload-btn:hover { background:#0d47a1; }
+  input[type="file"] { display:none; }
+  .download-btn {
+    padding:12px 32px; border:none; background:#4caf50; color:#fff;
+    border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
+    display:none;
+  }
+  .download-btn.active { display:block; }
+  .download-btn:hover { background:#388e3c; }
+</style>
 </head>
 <body>
 
-  <div class="description">
-    <h2>FB Profile Frame</h2>
-    <p>This is test frame by Riaz. Upload your photo and adjust the frame to fit perfectly.</p>
-  </div>
+<div class="description">
+  <h2>FB Profile Frame</h2>
+  <p>This is test frame by Riaz. Upload your photo and adjust it to fit perfectly.</p>
+</div>
 
-  <div class="frame-area" id="frame">
-    <img src="frames/frame1.png" class="bg-frame" alt="Frame" crossorigin="anonymous">
-  </div>
+<div class="frame-area" id="frame">
+  <img src="frames/frame1.png" class="bg-frame" alt="Frame" crossorigin="anonymous">
+</div>
 
-  <div class="controls">
-    <label for="upload" class="upload-btn">Upload Photo</label>
-    <input type="file" id="upload" accept="image/*">
-    
-    <div class="adjustment-controls" id="adjustments">
-      <div class="control-group">
-        <label>Scale: <span id="scaleValue">100</span>%</label>
-        <input type="range" id="scaleRange" min="50" max="200" value="100">
-      </div>
-      <div class="control-group">
-        <label>Horizontal Position: <span id="xValue">0</span>px</label>
-        <input type="range" id="xRange" min="-200" max="200" value="0">
-      </div>
-      <div class="control-group">
-        <label>Vertical Position: <span id="yValue">0</span>px</label>
-        <input type="range" id="yRange" min="-200" max="200" value="0">
-      </div>
-    </div>
+<div class="controls">
+  <label for="upload" class="upload-btn">Upload Photo</label>
+  <input type="file" id="upload" accept="image/*">
+  <button class="download-btn" id="downloadBtn">Download Frame</button>
+</div>
 
-    <button class="download-btn" id="downloadBtn">Download Frame</button>
-  </div>
+<script>
+const frame = document.getElementById('frame');
+const uploadInput = document.getElementById('upload');
+const downloadBtn = document.getElementById('downloadBtn');
+let uploadedImg = null;
 
-  <script>
-    const frame = document.getElementById('frame');
-    const uploadInput = document.getElementById('upload');
-    const adjustments = document.getElementById('adjustments');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const scaleRange = document.getElementById('scaleRange');
-    const xRange = document.getElementById('xRange');
-    const yRange = document.getElementById('yRange');
-    const scaleValue = document.getElementById('scaleValue');
-    const xValue = document.getElementById('xValue');
-    const yValue = document.getElementById('yValue');
-    
-    let uploadedImg = null;
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let currentScale = 1;
+// Transform variables
+let currentX=0, currentY=0, currentScale=1;
+let isDragging=false, startX=0, startY=0;
 
-    // ছবি আপলোড ইভেন্ট
-    uploadInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+// Upload photo
+uploadInput.addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload=function(ev){
+    if(uploadedImg) uploadedImg.remove();
+    uploadedImg=document.createElement('img');
+    uploadedImg.src=ev.target.result;
+    uploadedImg.classList.add('uploaded');
+    frame.insertBefore(uploadedImg, frame.querySelector('.bg-frame')); // Frame always on top
+    downloadBtn.classList.add('active');
+    currentX=0; currentY=0; currentScale=1;
+    updateTransform();
+  };
+  reader.readAsDataURL(file);
+});
 
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        if (uploadedImg) uploadedImg.remove();
-        uploadedImg = document.createElement('img');
-        uploadedImg.src = event.target.result;
-        uploadedImg.classList.add('uploaded');
-        frame.appendChild(uploadedImg);
-        
-        adjustments.classList.add('active');
-        downloadBtn.classList.add('active');
-        
-        // Reset values
-        currentX = 0;
-        currentY = 0;
-        currentScale = 1;
-        updateTransform();
-        resetSliders();
-      };
-      reader.readAsDataURL(file);
-    });
+// Update transform
+function updateTransform(){
+  if(!uploadedImg) return;
+  uploadedImg.style.transform=`translate(${currentX}px,${currentY}px) scale(${currentScale})`;
+}
 
-    function updateTransform() {
-      if (!uploadedImg) return;
-      uploadedImg.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
-    }
+// Drag desktop
+frame.addEventListener('mousedown', e=>{
+  if(!uploadedImg || e.target.classList.contains('bg-frame')) return;
+  isDragging=true;
+  startX = e.clientX - currentX;
+  startY = e.clientY - currentY;
+  uploadedImg.style.cursor='grabbing';
+});
+document.addEventListener('mousemove', e=>{
+  if(!isDragging || !uploadedImg) return;
+  currentX=e.clientX - startX;
+  currentY=e.clientY - startY;
+  updateTransform();
+});
+document.addEventListener('mouseup', ()=>{
+  isDragging=false;
+  if(uploadedImg) uploadedImg.style.cursor='grab';
+});
 
-    function resetSliders() {
-      scaleRange.value = 100;
-      xRange.value = 0;
-      yRange.value = 0;
-      scaleValue.textContent = '100';
-      xValue.textContent = '0';
-      yValue.textContent = '0';
-    }
+// Drag touch
+frame.addEventListener('touchstart', e=>{
+  if(!uploadedImg) return;
+  const touch = e.touches[0];
+  isDragging=true;
+  startX=touch.clientX - currentX;
+  startY=touch.clientY - currentY;
+});
+document.addEventListener('touchmove', e=>{
+  if(!isDragging || !uploadedImg) return;
+  const touch = e.touches[0];
+  currentX = touch.clientX - startX;
+  currentY = touch.clientY - startY;
+  updateTransform();
+});
+document.addEventListener('touchend', ()=>{ isDragging=false; });
 
-    // Manual adjustment controls
-    scaleRange.addEventListener('input', (e) => {
-      currentScale = e.target.value / 100;
-      scaleValue.textContent = e.target.value;
-      updateTransform();
-    });
+// Pinch zoom mobile
+let initialDistance=0, initialScale=1;
+frame.addEventListener('touchstart', e=>{
+  if(e.touches.length===2){
+    e.preventDefault();
+    const t1=e.touches[0], t2=e.touches[1];
+    initialDistance = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+    initialScale=currentScale;
+  }
+});
+frame.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    e.preventDefault();
+    const t1=e.touches[0], t2=e.touches[1];
+    const newDist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
+    currentScale=initialScale*(newDist/initialDistance);
+    if(currentScale<0.5) currentScale=0.5;
+    if(currentScale>3) currentScale=3;
+    updateTransform();
+  }
+});
 
-    xRange.addEventListener('input', (e) => {
-      currentX = parseInt(e.target.value);
-      xValue.textContent = e.target.value;
-      updateTransform();
-    });
+// Download
+downloadBtn.addEventListener('click', async ()=>{
+  if(!uploadedImg) return;
+  const canvas=document.createElement('canvas');
+  canvas.width=350; canvas.height=450;
+  const ctx=canvas.getContext('2d');
 
-    yRange.addEventListener('input', (e) => {
-      currentY = parseInt(e.target.value);
-      yValue.textContent = e.target.value;
-      updateTransform();
-    });
+  // Draw uploaded image
+  const img=new Image();
+  img.src=uploadedImg.src;
+  await new Promise(res=>img.onload=res);
+  ctx.save();
+  ctx.translate(175,225);
+  ctx.translate(currentX,currentY);
+  ctx.scale(currentScale,currentScale);
+  ctx.drawImage(img,-175,-225,350,450);
+  ctx.restore();
 
-    // Drag functionality (Desktop)
-    frame.addEventListener('mousedown', (e) => {
-      if (!uploadedImg || e.target.classList.contains('bg-frame')) return;
-      isDragging = true;
-      startX = e.clientX - currentX;
-      startY = e.clientY - currentY;
-      frame.style.cursor = 'grabbing';
-    });
+  // Draw frame
+  const frameImg=new Image();
+  frameImg.src='frames/frame1.png';
+  await new Promise(res=>frameImg.onload=res);
+  ctx.drawImage(frameImg,0,0,350,450);
 
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging || !uploadedImg) return;
-      currentX = e.clientX - startX;
-      currentY = e.clientY - startY;
-      updateTransform();
-      xRange.value = currentX;
-      yRange.value = currentY;
-      xValue.textContent = currentX;
-      yValue.textContent = currentY;
-    });
-
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-      frame.style.cursor = 'grab';
-    });
-
-    // Touch support (Mobile)
-    frame.addEventListener('touchstart', (e) => {
-      if (!uploadedImg || e.target.classList.contains('bg-frame')) return;
-      isDragging = true;
-      const touch = e.touches[0];
-      startX = touch.clientX - currentX;
-      startY = touch.clientY - currentY;
-    });
-
-    document.addEventListener('touchmove', (e) => {
-      if (!isDragging || !uploadedImg) return;
-      const touch = e.touches[0];
-      currentX = touch.clientX - startX;
-      currentY = touch.clientY - startY;
-      updateTransform();
-      xRange.value = currentX;
-      yRange.value = currentY;
-      xValue.textContent = currentX;
-      yValue.textContent = currentY;
-    });
-
-    document.addEventListener('touchend', () => {
-      isDragging = false;
-    });
-
-    // Download functionality
-    downloadBtn.addEventListener('click', async () => {
-      if (!uploadedImg) return;
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 350;
-      canvas.height = 450;
-
-      try {
-        // Draw uploaded image first
-        const img = new Image();
-        img.src = uploadedImg.src;
-        
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-        });
-        
-        ctx.save();
-        ctx.translate(175, 225);
-        ctx.translate(currentX, currentY);
-        ctx.scale(currentScale, currentScale);
-        ctx.drawImage(img, -175, -225, 350, 450);
-        ctx.restore();
-
-        // Draw frame on top
-        const frameImg = new Image();
-        frameImg.crossOrigin = 'anonymous';
-        frameImg.src = 'frames/frame1.png';
-        
-        await new Promise((resolve, reject) => {
-          frameImg.onload = resolve;
-          frameImg.onerror = reject;
-        });
-        
-        ctx.drawImage(frameImg, 0, 0, 350, 450);
-
-        // Download
-        canvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'profile-frame-by-riaz.png';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 'image/png');
-        
-      } catch (error) {
-        console.error('Download error:', error);
-        alert('Download failed. Please try again.');
-      }
-    });
-  </script>
-
+  canvas.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='profile-frame-by-riaz.png';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  },'image/png');
+});
+</script>
 </body>
 </html>
