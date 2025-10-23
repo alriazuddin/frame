@@ -131,7 +131,7 @@
   </div>
 
   <div class="frame-area" id="frame">
-    <img src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/frame1.png" class="bg-frame" alt="Frame">
+    <img src="frames/frame1.png" class="bg-frame" alt="Frame" crossorigin="anonymous">
   </div>
 
   <div class="controls">
@@ -287,18 +287,21 @@
 
     // Download functionality
     downloadBtn.addEventListener('click', async () => {
+      if (!uploadedImg) return;
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       canvas.width = 350;
       canvas.height = 450;
 
-      // Draw uploaded image
-      if (uploadedImg) {
+      try {
+        // Draw uploaded image first
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.src = uploadedImg.src;
-        await new Promise(resolve => {
+        
+        await new Promise((resolve, reject) => {
           img.onload = resolve;
+          img.onerror = reject;
         });
         
         ctx.save();
@@ -307,26 +310,35 @@
         ctx.scale(currentScale, currentScale);
         ctx.drawImage(img, -175, -225, 350, 450);
         ctx.restore();
+
+        // Draw frame on top
+        const frameImg = new Image();
+        frameImg.crossOrigin = 'anonymous';
+        frameImg.src = 'frames/frame1.png';
+        
+        await new Promise((resolve, reject) => {
+          frameImg.onload = resolve;
+          frameImg.onerror = reject;
+        });
+        
+        ctx.drawImage(frameImg, 0, 0, 350, 450);
+
+        // Download
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'profile-frame-by-riaz.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+        
+      } catch (error) {
+        console.error('Download error:', error);
+        alert('Download failed. Please try again.');
       }
-
-      // Draw frame on top
-      const frameImg = new Image();
-      frameImg.crossOrigin = 'anonymous';
-      frameImg.src = document.querySelector('.bg-frame').src;
-      await new Promise(resolve => {
-        frameImg.onload = resolve;
-      });
-      ctx.drawImage(frameImg, 0, 0, 350, 450);
-
-      // Download
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'profile-frame.png';
-        a.click();
-        URL.revokeObjectURL(url);
-      });
     });
   </script>
 
