@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facebook Photo Frame</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>riaz Frame</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>🎨 তোমার প্রোফাইল ফ্রেম বানাও</h1>
+    <h1>riaz Profile Frame</h1>
+    <p class="desc">এটি একটি পরীক্ষামূলক ফ্রেম সাইট — riaz দ্বারা নির্মিত।</p>
 
-    <input type="file" id="upload" accept="image/*">
-    <select id="frameSelect">
-      <option value="frames/frame1.png">Frame 1</option>
-      <option value="frames/frame2.png">Frame 2</option>
-    </select>
+    <div class="editor">
+      <div class="frame-area">
+        <img id="userImage" src="" alt="Your Image" class="user-img" />
+        <img id="frameImage" src="frames/frame1.png" alt="Frame" class="frame-img" />
+      </div>
 
-    <button id="applyBtn">Apply Frame</button>
-
-    <canvas id="canvas"></canvas>
-
-    <a id="download" class="hidden" download="framed-photo.png">Download Photo</a>
+      <input type="file" id="upload" accept="image/*" />
+      <div class="zoom-controls">
+        <button onclick="zoom(-0.1)">-</button>
+        <button onclick="zoom(0.1)">+</button>
+      </div>
+      <button id="downloadBtn">Download Photo</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
