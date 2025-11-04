@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE: html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
@@ -174,21 +174,15 @@ let initialDistance = 0, initialScale = 1; // For Pinch-to-Zoom
 // Fit image to canvas while maintaining aspect ratio
 function fitToCanvas() {
     if (!userImg.width || !userImg.height) return;
-    const canvasRatio = canvas.width / canvas.height;
-    const imgRatio = userImg.width / userImg.height;
-
-    // Scale to fit the image entirely within the canvas (no white space)
-    if (imgRatio > canvasRatio) {
-        // Image is wider, scale based on width
-        scale = canvas.width / userImg.width;
-    } else {
-        // Image is taller or square, scale based on height
-        scale = canvas.height / userImg.height;
-    }
     
+    // Set initial zoom level to 100%
+    scale = 1;
+
     // Center the image
     const imgW = userImg.width * scale;
     const imgH = userImg.height * scale;
+    
+    // Position the image in the center of the canvas
     imgX = (canvas.width - imgW) / 2;
     imgY = (canvas.height - imgH) / 2;
 }
@@ -235,7 +229,7 @@ uploadInput.addEventListener('change', e => {
             userImg = tempImg;
             imgLoaded = true;
             downloadBtn.classList.add('active');
-            fitToCanvas(); // Fit the image upon upload
+            fitToCanvas(); // Now sets scale=1 (100% zoom)
             draw();
             updateZoomDisplay();
         };
