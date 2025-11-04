@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Riaz Profile Frame</title>
+<title>Riaz Profile Frame (Fixed)</title>
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
   body {
@@ -32,26 +32,19 @@
     overflow: hidden;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    /* এখন ক্যানভাস থাকবে এর ভেতরে */
   }
-  .frame-area img.bg-frame {
-    position: absolute;
-    top:0; left:0;
-    width:100%; height:100%;
-    object-fit:cover;
-    pointer-events:none;
-    z-index:2;
+  
+  /* নতুন ক্যানভাস স্টাইল */
+  .frame-area canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    touch-action: none; /* টাচ ইভেন্ট ঠিকভাবে কাজ করার জন্য */
   }
-  .frame-area img.uploaded {
-    position:absolute;
-    top:0; left:0;
-    width:100%; height:100%;
-    object-fit:cover;
-    cursor:grab;
-    z-index:1;
-  }
+  
+  .frame-area canvas:active { cursor: grabbing; }
 
   .controls { margin-top:20px; display:flex; flex-direction:column; gap:15px; align-items:center;}
   .upload-btn {
@@ -63,21 +56,51 @@
   .download-btn {
     padding:12px 32px; border:none; background:#4caf50; color:#fff;
     border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
-    display:none;
+    display:none; /* শুরুতে লুকানো থাকবে */
   }
   .download-btn.active { display:block; }
   .download-btn:hover { background:#388e3c; }
+  
+  /* জুম নিয়ন্ত্রণের জন্য নতুন স্টাইল */
+  .zoom-controls { 
+    display:flex; 
+    justify-content:center; 
+    gap:10px; 
+    margin:10px 0; 
+  }
+  .zoom-btn { 
+    width:40px; 
+    height:40px; 
+    border:none; 
+    border-radius:50%; 
+    background:#ddd; 
+    font-size:20px; 
+    cursor:pointer;
+    color: #333;
+  }
+  .zoom-btn:hover { background:#ccc; }
+  #zoomDisplay {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
 
 <div class="description">
   <h2>Facebook Profile Frame</h2>
-  <p>This frame is created by Riaz for testing purposes. Upload your photo and adjust it for the best fit.</p>
+  <p>This frame is created by Riaz for testing purposes. Upload your photo and adjust it for the best fit (Drag and Pinch-to-Zoom supported).</p>
 </div>
 
 <div class="frame-area" id="frame">
-  <img src="frames/frame1.png" class="bg-frame" alt="Frame" crossorigin="anonymous">
+  <canvas id="canvas" width="2400" height="2400"></canvas>
+</div>
+
+<div class="zoom-controls">
+  <button class="zoom-btn" id="zoomOutBtn">−</button>
+  <span id="zoomDisplay">100%</span>
+  <button class="zoom-btn" id="zoomInBtn">+</button>
 </div>
 
 <div class="controls">
@@ -87,125 +110,240 @@
 </div>
 
 <script>
-const frame=document.getElementById('frame');
-const uploadInput=document.getElementById('upload');
-const downloadBtn=document.getElementById('downloadBtn');
-let uploadedImg=null;
+// DOM Elements
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const uploadInput = document.getElementById('upload');
+const downloadBtn = document.getElementById('downloadBtn');
+const zoomDisplay = document.getElementById('zoomDisplay');
+const zoomInBtn = document.getElementById('zoomInBtn');
+const zoomOutBtn = document.getElementById('zoomOutBtn');
+const previewContainer = document.getElementById('frame'); // প্রিভিউ কনটেইনারের আকার (350x350)
 
-// Transform vars
-let currentX=0, currentY=0, currentScale=1;
-let isDragging=false, startX=0, startY=0;
+// Image Vars
+let userImg = new Image();
+let frameImg = new Image();
+let imgLoaded = false;
+let frameLoaded = false;
+frameImg.crossOrigin = "anonymous"; // ফ্রেম ইমেজ ক্রস-অরিজিন রিকোয়েস্টের জন্য
+frameImg.src = 'frames/frame1.png'; // আপনার ফ্রেমের পাথ
+frameImg.onload = () => { frameLoaded = true; draw(); };
 
-// Upload photo
-uploadInput.addEventListener('change', e=>{
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    if(uploadedImg) uploadedImg.remove();
-    uploadedImg=document.createElement('img');
-    uploadedImg.src=ev.target.result;
-    uploadedImg.classList.add('uploaded');
-    frame.insertBefore(uploadedImg, frame.querySelector('.bg-frame'));
-    downloadBtn.classList.add('active');
-    currentX=0; currentY=0; currentScale=1;
-    updateTransform();
-  };
-  reader.readAsDataURL(file);
-});
+// Transform Vars (ক্যানভাসের রেজোলিউশনের ওপর ভিত্তি করে)
+let imgX = 0, imgY = 0, scale = 1;
+let isDragging = false, dragStart = {x: 0, y: 0}, imgPosStart = {x: 0, y: 0};
+let initialDistance = 0, initialScale = 1; // Pinch-to-Zoom এর জন্য
 
-function updateTransform(){
-  if(!uploadedImg) return;
-  uploadedImg.style.transform=`translate(${currentX}px,${currentY}px) scale(${currentScale})`;
+// **Helper functions (দ্বিতীয় কোড থেকে নেওয়া)**
+
+// ক্যানভাস সাইজের সাথে ছবিকে অনুপাত ঠিক রেখে ফিট করা
+function fitToCanvas() {
+    if (!userImg.width || !userImg.height) return;
+    const canvasRatio = canvas.width / canvas.height;
+    const imgRatio = userImg.width / userImg.height;
+
+    // ছবিটি ক্যানভাস এর মধ্যে পুরো ফিট করানোর জন্য (যেন সাদা অংশ না থাকে)
+    if (imgRatio > canvasRatio) {
+        // ইমেজ চওড়া, উচ্চতা দিয়ে স্কেল করা হবে
+        scale = canvas.width / userImg.width;
+    } else {
+        // ইমেজ লম্বা বা সমান, প্রস্থ দিয়ে স্কেল করা হবে
+        scale = canvas.height / userImg.height;
+    }
+    
+    // ছবিকে কেন্দ্রে স্থাপন করা
+    const imgW = userImg.width * scale;
+    const imgH = userImg.height * scale;
+    imgX = (canvas.width - imgW) / 2;
+    imgY = (canvas.height - imgH) / 2;
 }
 
-// Drag desktop
-frame.addEventListener('mousedown', e=>{
-  if(!uploadedImg || e.target.classList.contains('bg-frame')) return;
-  isDragging=true;
-  startX = e.clientX - currentX;
-  startY = e.clientY - currentY;
-  uploadedImg.style.cursor='grabbing';
+// ক্যানভাসে ছবি ও ফ্রেম আঁকা
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // ১. ছবি আঁকা
+    if (imgLoaded) {
+        ctx.drawImage(
+            userImg,
+            imgX, imgY,
+            userImg.width * scale, 
+            userImg.height * scale
+        );
+    }
+    
+    // ২. ফ্রেম আঁকা (সবসময় উপরে থাকবে)
+    if (frameLoaded) {
+        ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+    }
+}
+
+function updateZoomDisplay() { 
+    zoomDisplay.textContent = Math.round(scale * 100) + '%'; 
+}
+
+// **Upload Logic**
+uploadInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const tempImg = new Image();
+        tempImg.onload = () => {
+            userImg = tempImg;
+            imgLoaded = true;
+            downloadBtn.classList.add('active');
+            fitToCanvas(); // ছবি আপলোড হওয়ার সাথে সাথে ফিট করা
+            draw();
+            updateZoomDisplay();
+        };
+        tempImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
 });
-document.addEventListener('mousemove', e=>{
-  if(!isDragging || !uploadedImg) return;
-  currentX=e.clientX - startX;
-  currentY=e.clientY - startY;
-  updateTransform();
+
+// **Mouse/Touch Drag Logic (দ্বিতীয় কোড থেকে সংশোধিত)**
+
+// প্রিভিউ কন্টেইনারের সাইজ
+const containerRect = previewContainer.getBoundingClientRect();
+const scaleFactor = canvas.width / containerRect.width; // 2400/350 = ~6.857
+
+// মাউস ইভেন্ট
+canvas.addEventListener('mousedown', e => {
+    if (!imgLoaded) return;
+    isDragging = true;
+    dragStart.x = e.clientX; 
+    dragStart.y = e.clientY;
+    imgPosStart.x = imgX; 
+    imgPosStart.y = imgY;
+    canvas.style.cursor = 'grabbing';
 });
-document.addEventListener('mouseup', ()=>{
-  isDragging=false;
-  if(uploadedImg) uploadedImg.style.cursor='grab';
+
+window.addEventListener('mouseup', () => { 
+    isDragging = false; 
+    canvas.style.cursor = imgLoaded ? 'grab' : 'default';
 });
 
-// Drag touch
-frame.addEventListener('touchstart', e=>{
-  if(!uploadedImg) return;
-  if(e.touches.length===1){
-    const touch=e.touches[0];
-    isDragging=true;
-    startX=touch.clientX - currentX;
-    startY=touch.clientY - currentY;
-  } else if(e.touches.length===2){
-    e.preventDefault();
-    const t1=e.touches[0], t2=e.touches[1];
-    initialDistance = Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
-    initialScale=currentScale;
-  }
+window.addEventListener('mousemove', e => {
+    if (!isDragging || !imgLoaded) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    // প্রিভিউ স্ক্রিনের পিক্সেলকে ক্যানভাসের রেজোলিউশনে স্কেল করা
+    imgX = imgPosStart.x + dx * scaleFactor;
+    imgY = imgPosStart.y + dy * scaleFactor;
+    draw();
 });
-document.addEventListener('touchmove', e=>{
-  if(!uploadedImg) return;
-  if(isDragging && e.touches.length===1){
-    const touch=e.touches[0];
-    currentX=touch.clientX-startX;
-    currentY=touch.clientY-startY;
-    updateTransform();
-  } else if(e.touches.length===2){
-    e.preventDefault();
-    const t1=e.touches[0], t2=e.touches[1];
-    const newDist=Math.hypot(t2.clientX-t1.clientX, t2.clientY-t1.clientY);
-    currentScale=initialScale*(newDist/initialDistance);
-    if(currentScale<0.5) currentScale=0.5;
-    if(currentScale>3) currentScale=3;
-    updateTransform();
-  }
+
+// টাচ ইভেন্ট (Drag and Pinch-to-Zoom)
+canvas.addEventListener('touchstart', e => {
+    if (!imgLoaded) return;
+    e.preventDefault(); // ব্রাউজারের ডিফল্ট স্ক্রলিং বা জুম বন্ধ করতে
+    
+    if (e.touches.length === 1) {
+        // Drag
+        isDragging = true;
+        const touch = e.touches[0];
+        dragStart.x = touch.clientX;
+        dragStart.y = touch.clientY;
+        imgPosStart.x = imgX;
+        imgPosStart.y = imgY;
+        
+    } else if (e.touches.length === 2) {
+        // Zoom
+        isDragging = false; // জুম করার সময় ড্র্যাগ নয়
+        const t1 = e.touches[0], t2 = e.touches[1];
+        initialDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        initialScale = scale;
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+    if (!imgLoaded) return;
+    e.preventDefault(); // ব্রাউজারের ডিফল্ট স্ক্রলিং বা জুম বন্ধ করতে
+
+    if (e.touches.length === 1 && isDragging) {
+        // Drag
+        const touch = e.touches[0];
+        const dx = touch.clientX - dragStart.x;
+        const dy = touch.clientY - dragStart.y;
+        imgX = imgPosStart.x + dx * scaleFactor;
+        imgY = imgPosStart.y + dy * scaleFactor;
+        draw();
+        
+    } else if (e.touches.length === 2) {
+        // Zoom
+        const t1 = e.touches[0], t2 = e.touches[1];
+        const newDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const zoomAmount = newDist / initialDistance;
+        let newScale = initialScale * zoomAmount;
+        
+        // স্কেল সীমা সেট করা
+        if (newScale < 0.1) newScale = 0.1;
+        if (newScale > 10) newScale = 10;
+        
+        // জুমের কেন্দ্রবিন্দু
+        const midClientX = (t1.clientX + t2.clientX) / 2;
+        const midClientY = (t1.clientY + t2.clientY) / 2;
+        
+        // ক্যানভাসের সাপেক্ষে জুমের কেন্দ্রবিন্দু
+        const canvasRect = canvas.getBoundingClientRect();
+        const midCanvasX = (midClientX - canvasRect.left) * scaleFactor;
+        const midCanvasY = (midClientY - canvasRect.top) * scaleFactor;
+        
+        // জুমের সময় ছবির অবস্থান আপডেট
+        imgX -= (midCanvasX - imgX) * (newScale / scale - 1);
+        imgY -= (midCanvasY - imgY) * (newScale / scale - 1);
+        
+        scale = newScale;
+        draw();
+        updateZoomDisplay();
+    }
+}, { passive: false });
+
+window.addEventListener('touchend', () => { 
+    isDragging = false; 
 });
-document.addEventListener('touchend', ()=>{ isDragging=false; });
 
-// Download high-res 2400x2400
-downloadBtn.addEventListener('click', async ()=>{
-  if(!uploadedImg) return;
-  const canvas=document.createElement('canvas');
-  canvas.width=2400;
-  canvas.height=2400;
-  const ctx=canvas.getContext('2d');
+// **Button Zoom Logic**
+function adjustZoom(amount) {
+    if (!imgLoaded) return;
+    const newScale = scale + amount;
+    if (newScale < 0.1 || newScale > 10) return;
 
-  const scaleFactor=2400/350;
+    // ক্যানভাসের কেন্দ্রে জুম
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
-  const img=new Image();
-  img.src=uploadedImg.src;
-  await new Promise(res=>img.onload=res);
-  ctx.save();
-  ctx.translate(1200,1200);
-  ctx.translate(currentX*scaleFactor,currentY*scaleFactor);
-  ctx.scale(currentScale*scaleFactor,currentScale*scaleFactor);
-  ctx.drawImage(img,-175,-175,350,350);
-  ctx.restore();
+    // জুমের সময় ছবির অবস্থান আপডেট
+    imgX -= (centerX - imgX) * (newScale / scale - 1);
+    imgY -= (centerY - imgY) * (newScale / scale - 1);
 
-  const frameImg=new Image();
-  frameImg.src='frames/frame1.png';
-  await new Promise(res=>frameImg.onload=res);
-  ctx.drawImage(frameImg,0,0,2400,2400);
+    scale = newScale;
+    draw();
+    updateZoomDisplay();
+}
 
-  canvas.toBlob(blob=>{
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url; a.download='profile-frame-by-riaz.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  },'image/png');
+zoomInBtn.addEventListener('click', () => adjustZoom(0.1));
+zoomOutBtn.addEventListener('click', () => adjustZoom(-0.1));
+
+// **Download Logic**
+downloadBtn.addEventListener('click', () => {
+    if (!imgLoaded) return alert('Upload a photo first!');
+    if (!frameLoaded) return alert('Frame not loaded!');
+    
+    // ফাইনাল ড্রয়িং করে PNG তৈরি করা
+    draw(); 
+    
+    canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'profile-frame-by-riaz.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 'image/png');
 });
 </script>
 </body>
