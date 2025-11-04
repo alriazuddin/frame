@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Riaz Profile Frame (Fixed)</title>
+<title>Riaz Profile Frame (Fixed and Optimized)</title>
 <style>
   * { box-sizing: border-box; margin:0; padding:0; }
   body {
@@ -32,16 +32,16 @@
     overflow: hidden;
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
     background: #fff;
-    /* এখন ক্যানভাস থাকবে এর ভেতরে */
+    /* Now canvas will be inside it */
   }
   
-  /* নতুন ক্যানভাস স্টাইল */
+  /* New canvas style */
   .frame-area canvas {
     width: 100%;
     height: 100%;
     display: block;
     cursor: grab;
-    touch-action: none; /* টাচ ইভেন্ট ঠিকভাবে কাজ করার জন্য */
+    touch-action: none; /* To ensure touch events work correctly */
   }
   
   .frame-area canvas:active { cursor: grabbing; }
@@ -56,12 +56,12 @@
   .download-btn {
     padding:12px 32px; border:none; background:#4caf50; color:#fff;
     border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
-    display:none; /* শুরুতে লুকানো থাকবে */
+    display:none; /* Hidden initially */
   }
   .download-btn.active { display:block; }
   .download-btn:hover { background:#388e3c; }
   
-  /* জুম নিয়ন্ত্রণের জন্য নতুন স্টাইল */
+  /* New style for zoom controls */
   .zoom-controls { 
     display:flex; 
     justify-content:center; 
@@ -84,14 +84,31 @@
     align-items: center;
     font-weight: bold;
   }
+  .instructions { 
+    font-size:14px; 
+    margin-bottom:15px; 
+    line-height:1.6; 
+    text-align: center;
+    max-width: 400px;
+  }
 </style>
 </head>
 <body>
 
 <div class="description">
   <h2>Facebook Profile Frame</h2>
-  <p>This frame is created by Riaz for testing purposes. Upload your photo and adjust it for the best fit (Drag and Pinch-to-Zoom supported).</p>
+  <p>This frame is created by Riaz for testing purposes.</p>
 </div>
+
+<div class="instructions">
+    **এটি একটি পরীক্ষামূলক ফ্রেম।**
+    **ব্যবহারবিধি:**
+    * নেটওয়ার্ক জনিত কারণে ফ্রেম লোড না হলে পাতাটি রিলোড করুন
+    * **ছবি আপলোড করুন**
+    * মাউস দিয়ে ছবি **Drag** করুন বা দুই আংগুল দিয়ে **জুম** করে ছবির অবস্থান এডজাস্ট করে নিন
+    * **ডাউনলোড** বাটনে ক্লিক করে ছবি সংরক্ষণ করুন
+    Note: অসুবিধা হলে Chrome, Firefox অন্য ব্রাউজার ব্যবহার করুন। ফেসবুক থেকে সরাসরি কাজ নাও করতে পারে।
+  </div>
 
 <div class="frame-area" id="frame">
   <canvas id="canvas" width="2400" height="2400"></canvas>
@@ -118,51 +135,51 @@ const downloadBtn = document.getElementById('downloadBtn');
 const zoomDisplay = document.getElementById('zoomDisplay');
 const zoomInBtn = document.getElementById('zoomInBtn');
 const zoomOutBtn = document.getElementById('zoomOutBtn');
-const previewContainer = document.getElementById('frame'); // প্রিভিউ কনটেইনারের আকার (350x350)
+const previewContainer = document.getElementById('frame'); // Preview container size (350x350)
 
 // Image Vars
 let userImg = new Image();
 let frameImg = new Image();
 let imgLoaded = false;
 let frameLoaded = false;
-frameImg.crossOrigin = "anonymous"; // ফ্রেম ইমেজ ক্রস-অরিজিন রিকোয়েস্টের জন্য
-frameImg.src = 'frames/frame1.png'; // আপনার ফ্রেমের পাথ
+frameImg.crossOrigin = "anonymous"; // For cross-origin request of frame image
+frameImg.src = 'frames/frame1.png'; // Path to your frame
 frameImg.onload = () => { frameLoaded = true; draw(); };
 
-// Transform Vars (ক্যানভাসের রেজোলিউশনের ওপর ভিত্তি করে)
+// Transform Vars (Based on canvas resolution)
 let imgX = 0, imgY = 0, scale = 1;
 let isDragging = false, dragStart = {x: 0, y: 0}, imgPosStart = {x: 0, y: 0};
-let initialDistance = 0, initialScale = 1; // Pinch-to-Zoom এর জন্য
+let initialDistance = 0, initialScale = 1; // For Pinch-to-Zoom
 
-// **Helper functions (দ্বিতীয় কোড থেকে নেওয়া)**
+// **Helper functions**
 
-// ক্যানভাস সাইজের সাথে ছবিকে অনুপাত ঠিক রেখে ফিট করা
+// Fit image to canvas while maintaining aspect ratio
 function fitToCanvas() {
     if (!userImg.width || !userImg.height) return;
     const canvasRatio = canvas.width / canvas.height;
     const imgRatio = userImg.width / userImg.height;
 
-    // ছবিটি ক্যানভাস এর মধ্যে পুরো ফিট করানোর জন্য (যেন সাদা অংশ না থাকে)
+    // Scale to fit the image entirely within the canvas (no white space)
     if (imgRatio > canvasRatio) {
-        // ইমেজ চওড়া, উচ্চতা দিয়ে স্কেল করা হবে
+        // Image is wider, scale based on width
         scale = canvas.width / userImg.width;
     } else {
-        // ইমেজ লম্বা বা সমান, প্রস্থ দিয়ে স্কেল করা হবে
+        // Image is taller or square, scale based on height
         scale = canvas.height / userImg.height;
     }
     
-    // ছবিকে কেন্দ্রে স্থাপন করা
+    // Center the image
     const imgW = userImg.width * scale;
     const imgH = userImg.height * scale;
     imgX = (canvas.width - imgW) / 2;
     imgY = (canvas.height - imgH) / 2;
 }
 
-// ক্যানভাসে ছবি ও ফ্রেম আঁকা
+// Draw the image and frame on the canvas
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // ১. ছবি আঁকা
+    // 1. Draw the user image
     if (imgLoaded) {
         ctx.drawImage(
             userImg,
@@ -172,7 +189,7 @@ function draw() {
         );
     }
     
-    // ২. ফ্রেম আঁকা (সবসময় উপরে থাকবে)
+    // 2. Draw the frame (always on top)
     if (frameLoaded) {
         ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
     }
@@ -180,6 +197,13 @@ function draw() {
 
 function updateZoomDisplay() { 
     zoomDisplay.textContent = Math.round(scale * 100) + '%'; 
+}
+
+function getTouchDist(touches) { 
+    return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY); 
+}
+function getTouchMid(touches) { 
+    return { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 }; 
 }
 
 // **Upload Logic**
@@ -193,7 +217,7 @@ uploadInput.addEventListener('change', e => {
             userImg = tempImg;
             imgLoaded = true;
             downloadBtn.classList.add('active');
-            fitToCanvas(); // ছবি আপলোড হওয়ার সাথে সাথে ফিট করা
+            fitToCanvas(); // Fit the image upon upload
             draw();
             updateZoomDisplay();
         };
@@ -202,13 +226,13 @@ uploadInput.addEventListener('change', e => {
     reader.readAsDataURL(file);
 });
 
-// **Mouse/Touch Drag Logic (দ্বিতীয় কোড থেকে সংশোধিত)**
+// **Mouse/Touch Drag Logic (Optimized)**
 
-// প্রিভিউ কন্টেইনারের সাইজ
+// Scale factor from preview size (350px) to canvas resolution (2400px)
 const containerRect = previewContainer.getBoundingClientRect();
-const scaleFactor = canvas.width / containerRect.width; // 2400/350 = ~6.857
+const scaleFactor = canvas.width / containerRect.width; // 2400 / 350
 
-// মাউস ইভেন্ট
+// Mouse Events
 canvas.addEventListener('mousedown', e => {
     if (!imgLoaded) return;
     isDragging = true;
@@ -228,16 +252,16 @@ window.addEventListener('mousemove', e => {
     if (!isDragging || !imgLoaded) return;
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
-    // প্রিভিউ স্ক্রিনের পিক্সেলকে ক্যানভাসের রেজোলিউশনে স্কেল করা
+    // Scale preview pixels to canvas resolution
     imgX = imgPosStart.x + dx * scaleFactor;
     imgY = imgPosStart.y + dy * scaleFactor;
     draw();
 });
 
-// টাচ ইভেন্ট (Drag and Pinch-to-Zoom)
+// Touch Events (Drag and Pinch-to-Zoom)
 canvas.addEventListener('touchstart', e => {
     if (!imgLoaded) return;
-    e.preventDefault(); // ব্রাউজারের ডিফল্ট স্ক্রলিং বা জুম বন্ধ করতে
+    e.preventDefault(); // Prevent default browser scrolling/zooming
     
     if (e.touches.length === 1) {
         // Drag
@@ -250,16 +274,15 @@ canvas.addEventListener('touchstart', e => {
         
     } else if (e.touches.length === 2) {
         // Zoom
-        isDragging = false; // জুম করার সময় ড্র্যাগ নয়
-        const t1 = e.touches[0], t2 = e.touches[1];
-        initialDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        isDragging = false; // Not dragging during zoom
+        initialDistance = getTouchDist(e.touches);
         initialScale = scale;
     }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
     if (!imgLoaded) return;
-    e.preventDefault(); // ব্রাউজারের ডিফল্ট স্ক্রলিং বা জুম বন্ধ করতে
+    e.preventDefault(); // Prevent default browser scrolling/zooming
 
     if (e.touches.length === 1 && isDragging) {
         // Drag
@@ -272,25 +295,22 @@ canvas.addEventListener('touchmove', e => {
         
     } else if (e.touches.length === 2) {
         // Zoom
-        const t1 = e.touches[0], t2 = e.touches[1];
-        const newDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const newDist = getTouchDist(e.touches);
+        const touchMid = getTouchMid(e.touches); // Get center point (client coords)
+        
         const zoomAmount = newDist / initialDistance;
         let newScale = initialScale * zoomAmount;
         
-        // স্কেল সীমা সেট করা
+        // Set scale limits
         if (newScale < 0.1) newScale = 0.1;
         if (newScale > 10) newScale = 10;
         
-        // জুমের কেন্দ্রবিন্দু
-        const midClientX = (t1.clientX + t2.clientX) / 2;
-        const midClientY = (t1.clientY + t2.clientY) / 2;
-        
-        // ক্যানভাসের সাপেক্ষে জুমের কেন্দ্রবিন্দু
+        // Center point relative to canvas resolution
         const canvasRect = canvas.getBoundingClientRect();
-        const midCanvasX = (midClientX - canvasRect.left) * scaleFactor;
-        const midCanvasY = (midClientY - canvasRect.top) * scaleFactor;
+        const midCanvasX = (touchMid.x - canvasRect.left) * scaleFactor;
+        const midCanvasY = (touchMid.y - canvasRect.top) * scaleFactor;
         
-        // জুমের সময় ছবির অবস্থান আপডেট
+        // Update image position during zoom
         imgX -= (midCanvasX - imgX) * (newScale / scale - 1);
         imgY -= (midCanvasY - imgY) * (newScale / scale - 1);
         
@@ -300,8 +320,10 @@ canvas.addEventListener('touchmove', e => {
     }
 }, { passive: false });
 
-window.addEventListener('touchend', () => { 
-    isDragging = false; 
+window.addEventListener('touchend', e => { 
+    if (e.touches.length === 0) {
+        isDragging = false; 
+    }
 });
 
 // **Button Zoom Logic**
@@ -310,12 +332,15 @@ function adjustZoom(amount) {
     const newScale = scale + amount;
     if (newScale < 0.1 || newScale > 10) return;
 
-    // ক্যানভাসের কেন্দ্রে জুম
+    // Zoom around the center of the canvas
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
 
-    // জুমের সময় ছবির অবস্থান আপডেট
+    // Update image position during zoom
     imgX -= (centerX - imgX) * (newScale / scale - 1);
+    imgY -= (centerY - centerY) * (newScale / scale - 1); // Fixed Y center calculation
+    
+    // Y update fix: should use centerY (canvas center) for standard button zoom
     imgY -= (centerY - imgY) * (newScale / scale - 1);
 
     scale = newScale;
@@ -331,7 +356,7 @@ downloadBtn.addEventListener('click', () => {
     if (!imgLoaded) return alert('Upload a photo first!');
     if (!frameLoaded) return alert('Frame not loaded!');
     
-    // ফাইনাল ড্রয়িং করে PNG তৈরি করা
+    // Final draw to create the PNG
     draw(); 
     
     canvas.toBlob(blob => {
