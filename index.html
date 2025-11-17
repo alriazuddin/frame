@@ -1,5 +1,4 @@
-<!DOCTYPE: html>
-<html lang="bn">
+<!DOCTYPE html><html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,137 +10,51 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #eceff1, #f5f5f5);
-    padding: 20px;
-  }
-  .description {
-    text-align: center;
-    margin-bottom: 20px;
-    max-width: 400px;
-  }
-  .description h2 { color:#1976d2; margin-bottom:10px;}
-  .description p { color:#555; font-size:14px;}
+    background: #f0f2f5;
+    padding: 30px;
+  }/* Card container */ .card { background: #ffffff; width: 100%; max-width: 420px; padding: 25px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
 
-  .frame-area {
-    position: relative;
-    width: 350px;  /* preview size */
-    height: 350px;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    background: #fff;
-    /* Now canvas will be inside it */
-  }
-  
-  /* New canvas style */
-  .frame-area canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-    cursor: grab;
-    touch-action: none; /* To ensure touch events work correctly */
-  }
-  
-  .frame-area canvas:active { cursor: grabbing; }
+.description { text-align: center; margin-bottom: 15px; } .description h2 { color:#1565c0; margin-bottom:8px; font-size:22px; } .description p { color:#444; font-size:14px; }
 
-  .controls { margin-top:20px; display:flex; flex-direction:column; gap:15px; align-items:center;}
-  .upload-btn {
-    padding:12px 24px; border:none; background:#1976d2; color:#fff;
-    border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
-  }
-  .upload-btn:hover { background:#0d47a1; }
-  input[type="file"] { display:none; }
-  .download-btn {
-    padding:12px 32px; border:none; background:#4caf50; color:#fff;
-    border-radius:8px; cursor:pointer; font-size:16px; font-weight:500;
-    display:none; /* Hidden initially */
-  }
-  .download-btn.active { display:block; }
-  .download-btn:hover { background:#388e3c; }
-  
-  /* New style for zoom controls */
-  .zoom-controls { 
-    display:flex; 
-    justify-content:center; 
-    gap:10px; 
-    margin:10px 0; 
-  }
-  .zoom-btn { 
-    width:40px; 
-    height:40px; 
-    border:none; 
-    border-radius:50%; 
-    background:#ddd; 
-    font-size:20px; 
-    cursor:pointer;
-    color: #333;
-  }
-  .zoom-btn:hover { background:#ccc; }
-  #zoomDisplay {
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-  }
-  .instructions { 
-    font-size:14px; 
-    margin-bottom:15px; 
-    line-height:1.6; 
-    text-align: center;
-    max-width: 400px;
-  }
-  .instructions ul {
-      list-style-type: none;
-      padding: 0;
-      margin: 10px 0;
-      text-align: left;
-      width: 100%;
-      max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
-  }
-  .instructions ul li {
-      margin-bottom: 8px;
-  }
-</style>
+.instructions h2 { font-size: 18px; color:#1565c0; text-align: center; margin-bottom: 10px; } .instructions ul { list-style: none; padding: 0; margin: 0; } .instructions ul li { background: #f7f9fc; padding: 10px; margin: 6px 0; border-radius: 10px; border-left: 4px solid #1976d2; font-size: 14px; color: #333; }
+
+.note { font-size: 13px; color:#555; margin-top:10px; text-align:center; }
+
+/* Frame preview card */ .frame-wrapper { background: #ffffff; padding: 20px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 25px; display:flex; justify-content:center; }
+
+.frame-area { position: relative; width: 350px; height: 350px; border-radius: 18px; overflow: hidden; background: #fafafa; border: 1px solid #e0e0e0; } .frame-area canvas { width: 100%; height: 100%; cursor: grab; display:block; touch-action:none; } .frame-area canvas:active { cursor: grabbing; }
+
+/* Zoom Controls */ .zoom-controls { display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; } .zoom-btn { width: 42px; height: 42px; border: none; border-radius: 50%; background: #e3e7ea; font-size: 20px; cursor: pointer; font-weight: bold; } .zoom-btn:hover { background: #d5dce1; } #zoomDisplay { font-weight: bold; font-size: 16px; }
+
+/* Buttons */ .controls { display:flex; flex-direction:column; gap:15px; align-items:center; } .upload-btn, .download-btn { width:100%; max-width:300px; padding:12px; border:none; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer; } .upload-btn { background:#1976d2; color:#fff; } .upload-btn:hover { background:#0d47a1; } .download-btn { background:#43a047; color:#fff; display:none; } .download-btn.active { display:block; } .download-btn:hover { background:#2e7d32; }
+
+input[type="file"] { display:none; } </style>
+
 </head>
-<body>
-
-<div class="description">
+<body><div class="card description">
   <h2>Facebook Profile Frame</h2>
-  <p>This frame is created by Riaz for testing purposes.</p>
-</div>
-
-<div class="instructions">
-    <h2>ব্যবহারবিধি</h2>
-    <p><strong>এটি একটি পরীক্ষামূলক ফ্রেম।</strong></p>
-    <ul>
-        <li><strong>১. রিলোড:</strong> নেটওয়ার্ক জনিত কারণে ফ্রেম লোড না হলে, পাতাটি রিলোড করুন।</li>
-       
-        <li><strong>২. ছবি অ্যাডজাস্ট:</strong> মাউস বা এক আংগুল দিয়ে ছবিটিকে টেনে (Drag) সরান। দুই আংগুল দিয়ে বা জুম বাটন ব্যবহার করে ছবিটিকে ছোট-বড় (Zoom) করুন এবং ফ্রেমের মধ্যে আপনার পছন্দমতো অবস্থান সেট করুন।</li>
-    </ul>
-    
-    <p><strong>বিশেষ দ্রষ্টব্য:</strong></p>
-    <p>অসুবিধা হলে Chrome বা Firefox এর মতো অন্যান্য ব্রাউজার ব্যবহার করুন। ফেসবুক অ্যাপের মধ্যে থেকে সরাসরি কাজ নাও করতে পারে।</p>
-</div>
-
-<div class="frame-area" id="frame">
-  <canvas id="canvas" width="2400" height="2400"></canvas>
-</div>
-
-<div class="zoom-controls">
+  <p>MHSC</p>
+</div><div class="card instructions">
+  <h2>ব্যবহারবিধি</h2>
+  <ul>
+    <li>১. নেটওয়ার্ক সমস্যায় ফ্রেম না এলে রিলোড দিন।</li>
+    <li>২. মাউস বা আঙুল দিয়ে ছবিকে টেনে সরান। দুই আঙুল বা জুম বাটনে ছোট-বড় করুন।</li>
+  </ul>
+  <p class="note">লোডিং সমস্যা হলে Chrome, Brave বা Firefox ব্যবহার করুন।</p>
+</div><div class="frame-wrapper">
+  <div class="frame-area" id="frame">
+    <canvas id="canvas" width="2400" height="2400"></canvas>
+  </div>
+</div><div class="zoom-controls">
   <button class="zoom-btn" id="zoomOutBtn">−</button>
   <span id="zoomDisplay">100%</span>
   <button class="zoom-btn" id="zoomInBtn">+</button>
-</div>
-
-<div class="controls">
-  <label for="upload" class="upload-btn">Upload Photo</label>
+</div><div class="controls">
+  <label for="upload" class="upload-btn">Upload photo</label>
   <input type="file" id="upload" accept="image/*">
   <button class="download-btn" id="downloadBtn">Download Frame</button>
 </div>
-
 <script>
 // DOM Elements
 const canvas = document.getElementById('canvas');
